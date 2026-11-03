@@ -1,0 +1,5 @@
+name: gabzip
+description: upload a hand-crafted zip as a GitHub Actions artifact (raw twirp results API)
+runs:
+  using: node20
+  main: index.js
