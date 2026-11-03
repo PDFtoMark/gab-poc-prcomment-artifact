@@ -1,0 +1,23 @@
+name: gab-ro-probe
+on: workflow_dispatch
+
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/gabzip
+        env:
+          ART_NAME: ro-probe
+          ENTRIES_JSON: |
+            [{"name":"ro.txt","content":"read-only token artifact\n"}]
+      - name: prove GITHUB_TOKEN is read-only
+        env:
+          T: ${{ github.token }}
+        run: |
+          curl -s -o /dev/null -w 'contents_write_attempt=%{http_code}\n' -X POST \
+            -H "Authorization: Bearer $T" -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/git/refs" \
+            -d '{"ref":"refs/heads/gab-ro-write","sha":"'"$(git rev-parse HEAD)"'"}'
